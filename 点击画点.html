@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>画个三角形</title>
+</head>
+
+<body onload="main()">
+    <canvas id="glcanvas" width="640" height="480">
+        你的浏览器似乎不支持或者禁用了HTML5 <code>&lt;canvas&gt;</code> 元素.
+    </canvas>
+</body>
+<script src="utils/cuon-utils.js"></script>
+<script>
+    let arrayBuffer = new Float32Array()
+    function main() {
+        const canvas = document.querySelector("#glcanvas");
+        // 初始化WebGL上下文
+        const gl = canvas.getContext("webgl");
+
+        // 确认WebGL支持性
+        if (!gl) {
+            alert("无法初始化WebGL，你的浏览器、操作系统或硬件等可能不支持WebGL。");
+            return;
+        }
+        // 使用完全不透明的黑色清除所有图像
+        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        // 用上面指定的颜色清除缓冲区
+        gl.clear(gl.COLOR_BUFFER_BIT);
+
+        const VSHADER_SOURCE = `
+            attribute vec4 a_Position;
+            void main() {
+                gl_Position = a_Position;
+                gl_PointSize = 10.0;
+            }
+        `;
+        const FSHADER_SOURCE = `
+            void main() {
+                 gl_FragColor = vec4(1.0 ,0.0 ,0.0 ,1.0);
+             }
+        `;
+        initShaders(gl, VSHADER_SOURCE, FSHADER_SOURCE);
+
+        // 监听点击事件
+        document.getElementById('glcanvas').addEventListener('mousedown', e => {
+            clear(gl);
+            // 左上角原点坐标
+            const x = (e.offsetX - 320) / 320;
+            const y = -(e.offsetY - 240) / 240;
+            let length = arrayBuffer.length;
+            const newArr = new Float32Array(length + 2)
+            for (let i = 0; i < arrayBuffer.length; i++) {
+                newArr[i] = arrayBuffer[i]
+            }
+            newArr[arrayBuffer.length] = x;
+            newArr[arrayBuffer.length + 1] = y;
+            const len = initVertexBuffer(gl, newArr);
+            gl.drawArrays(gl.POINTS, 0, len);
+            arrayBuffer = newArr;
+        })
+    }
+
+    function initVertexBuffer(gl, verties) {
+        const vertexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, verties, gl.STATIC_DRAW);
+
+        const a_Position = gl.getAttribLocation(gl.program, "a_Position");
+        const FSIZE = verties.BYTES_PER_ELEMENT
+        gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 2 * FSIZE, 0);
+        gl.enableVertexAttribArray(a_Position);
+        return verties.length / 2;
+    }
+
+    function clear(gl) {
+        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+    }
+</script>
+
+</html>

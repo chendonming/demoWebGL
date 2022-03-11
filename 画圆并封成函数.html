@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <link rel="stylesheet" href="lib/dat.gui.css">
+</head>
+
+
+<body onload="main()">
+<canvas id="glcanvas" width="600" height="600">
+  你的浏览器似乎不支持或者禁用了HTML5 <code>&lt;canvas&gt;</code> 元素.
+</canvas>
+</body>
+<script src="utils/cuon-utils.js"></script>
+<script src="lib/dat.gui.min.js"></script>
+<script>
+  function main () {
+    const canvas = document.querySelector('#glcanvas')
+    // 初始化WebGL上下文
+    const gl = canvas.getContext('webgl')
+    // 确认WebGL支持性
+    if (!gl) {
+      alert('无法初始化WebGL，你的浏览器、操作系统或硬件等可能不支持WebGL。')
+      return
+    }
+    // 使用完全不透明的黑色清除所有图像
+    gl.clearColor(0.0, 0.0, 0.0, 1.0)
+    // 用上面指定的颜色清除缓冲区
+    gl.clear(gl.COLOR_BUFFER_BIT)
+
+    const vshader = `
+        attribute vec4 a_Position;
+        void main() {
+          gl_Position = a_Position;
+        }
+    `
+    const fshader = `
+        void main() {
+          gl_FragColor = vec4(1.0 ,0.0 ,0.0 ,1.0);
+        }
+    `
+    initShaders(gl, vshader, fshader)
+
+    const guiOption = {
+      '三角形数量': 3
+    };
+    var gui = new dat.GUI();
+    var folder = gui.addFolder('测试');
+    var controller = gui.add(guiOption, '三角形数量').min(3).max(50).step(1)
+    folder.open()
+
+    controller.onChange(function () {
+      render()
+    })
+
+    render()
+
+    function render() {
+      clear(gl);
+      var N = guiOption.三角形数量
+      var vertexData = [0.0, 0.0]
+      var r = 0.8
+
+      for (var i = 0; i <= N; i++) {
+        var theta = i * 2 * Math.PI / N
+        var x = r * Math.sin(theta)
+        var y = r * Math.cos(theta)
+        vertexData.push(x, y)
+      }
+
+      var vertices = new Float32Array(vertexData)
+      const len = initVertexBuffer(gl, vertices)
+      gl.drawArrays(gl.TRIANGLE_FAN, 0, len)
+    }
+  }
+</script>
+
+</html>
